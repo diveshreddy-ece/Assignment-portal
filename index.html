@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assignment Submission Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080b12;
+      --surface: #0e1117;
+      --surface2: #131720;
+      --surface3: #181d28;
+      --border: #1e2433;
+      --border-strong: #28304a;
+      --text: #e2e8f8;
+      --text-muted: #4e5875;
+      --text-soft: #8b93b8;
+      --accent: #5b8def;
+      --accent-bright: #7aa3f5;
+      --accent-dim: #111a35;
+      --accent-border: #1e2f5c;
+      --success: #34d48a;
+      --success-bg: #071a10;
+      --success-border: #0f3d23;
+      --error: #fc6b6b;
+      --error-bg: #180808;
+      --error-border: #4a1111;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3.5rem 1rem 5rem;
+      background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91,141,239,0.08) 0%, transparent 70%);
+    }
+
+    header { text-align: center; margin-bottom: 2.75rem; }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-bright);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 100px;
+      padding: 0.3rem 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .header-badge span { width: 6px; height: 6px; background: var(--accent-bright); border-radius: 50%; display: inline-block; animation: pulse 2s ease-in-out infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    header p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      font-weight: 400;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 2rem 1.75rem;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 0 0 1px rgba(91,141,239,0.04), 0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-bright);
+      margin-bottom: 1.1rem;
+      opacity: 0.7;
+    }
+
+    .field { margin-bottom: 1.1rem; }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-soft);
+      margin-bottom: 0.4rem;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 0 0.85rem;
+      font-family: var(--sans);
+      font-size: 0.875rem;
+      color: var(--text);
+      background: var(--surface2);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    input::placeholder { color: var(--text-muted); font-size: 0.825rem; }
+
+    input:hover { border-color: #323d60; }
+
+    input:focus {
+      border-color: var(--accent);
+      background: var(--surface3);
+      box-shadow: 0 0 0 3px rgba(91,141,239,0.1);
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .drop-zone {
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 10px;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: var(--surface2);
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 0 3px rgba(91,141,239,0.07);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    .drop-icon {
+      width: 40px; height: 40px;
+      margin: 0 auto 0.85rem;
+      background: var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border-strong);
+    }
+
+    .drop-icon svg { width: 18px; height: 18px; stroke: var(--accent-bright); fill: none; }
+
+    .drop-text { font-size: 0.875rem; color: var(--text-soft); }
+    .drop-text strong { color: var(--text); font-weight: 500; }
+    .drop-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.35rem; font-family: var(--mono); letter-spacing: 0.04em; }
+
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+      margin-top: 0.75rem;
+    }
+
+    .file-preview.visible { display: flex; }
+
+    .file-icon { font-size: 1.1rem; }
+
+    .file-name {
+      flex: 1;
+      font-size: 0.8rem;
+      font-family: var(--mono);
+      color: var(--accent-bright);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size { font-size: 0.72rem; color: var(--text-muted); font-family: var(--mono); }
+
+    .remove-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 0.9rem; line-height: 1;
+      padding: 0 0.25rem; transition: color 0.15s;
+    }
+    .remove-btn:hover { color: var(--error); }
+
+    .submit-btn {
+      width: 100%;
+      height: 46px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      margin-top: 1.5rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      letter-spacing: 0.01em;
+      box-shadow: 0 4px 20px rgba(91,141,239,0.25);
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: var(--accent-bright);
+      box-shadow: 0 4px 28px rgba(91,141,239,0.4);
+    }
+    .submit-btn:active:not(:disabled) { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.2; cursor: not-allowed; box-shadow: none; }
+
+    .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      line-height: 1.65;
+    }
+
+    .toast.success {
+      display: block;
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success);
+    }
+
+    .toast.error {
+      display: block;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error);
+    }
+
+    .toast strong { font-weight: 600; display: block; margin-bottom: 0.3rem; font-size: 0.9rem; }
+
+    .code-display {
+      font-family: var(--mono);
+      font-size: 1.8rem;
+      letter-spacing: 0.35em;
+      font-weight: 500;
+      margin-top: 0.6rem;
+      color: var(--success);
+      text-shadow: 0 0 20px rgba(52,212,138,0.3);
+    }
+
+    .progress-bar-wrap {
+      height: 2px; background: var(--border); border-radius: 2px;
+      margin-top: 0.9rem; overflow: hidden; display: none;
+    }
+
+    .progress-bar-wrap.visible { display: block; }
+
+    .progress-bar {
+      height: 100%; background: var(--accent);
+      border-radius: 2px; width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 8px rgba(91,141,239,0.6);
+    }
+
+
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge"><span></span> Submission Portal</div>
+  <h1>Assignment Submission</h1>
+  <p>Upload your file — a confirmation code will be sent to your email</p>
+</header>
+
+<div class="card">
+  <p class="section-label">Your Details</p>
+
+  <div class="field">
+    <label for="student-name">Full name</label>
+    <input type="text" id="student-name" placeholder="e.g. Priya Sharma" />
+  </div>
+
+  <div class="field">
+    <label for="student-email">Email address</label>
+    <input type="email" id="student-email" placeholder="you@example.com" />
+  </div>
+
+  <hr class="divider" />
+  <p class="section-label">Assignment</p>
+
+  <div class="field">
+    <label for="assignment-title">Assignment title</label>
+    <input type="text" id="assignment-title" placeholder="e.g. Data Structures – Lab 3" />
+  </div>
+
+  <div class="drop-zone" id="drop-zone">
+    <input type="file" id="file-input" accept=".pdf,.doc,.docx,.zip,.txt,.pptx,.xlsx,.png,.jpg" />
+    <div class="drop-icon">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12M8 8l4-4 4 4"/></svg>
+    </div>
+    <p class="drop-text"><strong>Click to choose</strong> or drag &amp; drop</p>
+    <p class="drop-hint">PDF · DOC · DOCX · ZIP · PPT · XLS · PNG · JPG</p>
+  </div>
+
+  <div class="file-preview" id="file-preview">
+    <span class="file-icon">📄</span>
+    <span class="file-name" id="file-name-text"></span>
+    <span class="file-size" id="file-size-text"></span>
+    <button class="remove-btn" id="remove-file" title="Remove">✕</button>
+  </div>
+
+  <div class="progress-bar-wrap" id="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <button class="submit-btn" id="submit-btn" disabled>
+    <div class="spinner" id="spinner"></div>
+    <span id="btn-text">Submit assignment</span>
+  </button>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+
+
+<script>
+  const CONFIG = {
+    cloudinary: {
+      cloudName: "dmnxhbzke",
+      uploadPreset: "assignment"
+    },
+    emailjs: {
+      publicKey: "70Gaiw5BCmcM6KZ94",
+      serviceId: "service_snyzgiw",
+      templateId: "template_mhh7kiv"
+    }
+  };
+
+  emailjs.init(CONFIG.emailjs.publicKey);
+
+  let selectedFile = null;
+
+  const dropZone    = document.getElementById("drop-zone");
+  const fileInput   = document.getElementById("file-input");
+  const filePreview = document.getElementById("file-preview");
+  const fileNameEl  = document.getElementById("file-name-text");
+  const fileSizeEl  = document.getElementById("file-size-text");
+  const removeBtn   = document.getElementById("remove-file");
+  const submitBtn   = document.getElementById("submit-btn");
+  const spinner     = document.getElementById("spinner");
+  const btnText     = document.getElementById("btn-text");
+  const toast       = document.getElementById("toast");
+  const progressWrap= document.getElementById("progress-wrap");
+  const progressBar = document.getElementById("progress-bar");
+
+  function formatBytes(b) {
+    if (b < 1024) return b + " B";
+    if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+    return (b / 1048576).toFixed(1) + " MB";
+  }
+
+  function setFile(file) {
+    selectedFile = file;
+    fileNameEl.textContent = file.name;
+    fileSizeEl.textContent = formatBytes(file.size);
+    filePreview.classList.add("visible");
+    checkReady();
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileInput.value = "";
+    filePreview.classList.remove("visible");
+    checkReady();
+  }
+
+  function checkReady() {
+    const name  = document.getElementById("student-name").value.trim();
+    const email = document.getElementById("student-email").value.trim();
+    const title = document.getElementById("assignment-title").value.trim();
+    submitBtn.disabled = !(name && email && title && selectedFile);
+  }
+
+  fileInput.addEventListener("change", e => { if (e.target.files[0]) setFile(e.target.files[0]); });
+  removeBtn.addEventListener("click", clearFile);
+
+  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+
+  ["student-name", "student-email", "assignment-title"].forEach(id => {
+    document.getElementById(id).addEventListener("input", checkReady);
+  });
+
+  function generateCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  async function uploadToCloudinary(file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CONFIG.cloudinary.uploadPreset);
+      formData.append("folder", "assignments");
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://api.cloudinary.com/v1_1/${CONFIG.cloudinary.cloudName}/auto/upload`);
+
+      xhr.upload.addEventListener("progress", e => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 80));
+      });
+
+      xhr.onload = () => {
+        const res = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) resolve(res.secure_url);
+        else reject(new Error(res.error?.message || "Upload failed"));
+      };
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.send(formData);
+    });
+  }
+
+  async function sendEmail(to, name, code, fileUrl, title) {
+    return emailjs.send(CONFIG.emailjs.serviceId, CONFIG.emailjs.templateId, {
+      to_email: to,
+      name,
+      code,
+      file: fileUrl,
+      title
+    });
+  }
+
+  function showToast(type, html) {
+    toast.className = "toast " + type;
+    toast.innerHTML = html;
+  }
+
+  function setProgress(pct) {
+    progressBar.style.width = pct + "%";
+  }
+
+  submitBtn.addEventListener("click", async () => {
+    const name  = document.getElementById("student-name").value.trim();
+    const email = document.getElementById("student-email").value.trim();
+    const title = document.getElementById("assignment-title").value.trim();
+
+    submitBtn.disabled = true;
+    spinner.style.display = "block";
+    btnText.textContent = "Uploading…";
+    progressWrap.classList.add("visible");
+    setProgress(0);
+    toast.className = "toast";
+
+    try {
+      const code = generateCode();
+
+      const fileUrl = await uploadToCloudinary(selectedFile, pct => {
+        setProgress(pct);
+        btnText.textContent = `Uploading… ${pct}%`;
+      });
+
+      setProgress(85);
+      btnText.textContent = "Sending confirmation…";
+
+      await sendEmail(email, name, code, fileUrl, title);
+
+      setProgress(100);
+      btnText.textContent = "Done!";
+
+      showToast("success", `
+        <strong>Submission received ✓</strong>
+        Your assignment <em>${title}</em> has been uploaded.<br/>
+        Your confirmation code:<br/>
+        <div class="code-display">${code}</div>
+        <br/>Sent to <strong>${email}</strong>.
+      `);
+
+      setTimeout(() => {
+        ["student-name", "student-email", "assignment-title"].forEach(id => {
+          document.getElementById(id).value = "";
+        });
+        clearFile();
+        progressWrap.classList.remove("visible");
+        setProgress(0);
+        spinner.style.display = "none";
+        btnText.textContent = "Submit assignment";
+        submitBtn.disabled = true;
+        toast.className = "toast";
+      }, 4000);
+
+    } catch (err) {
+      showToast("error", `<strong>Something went wrong</strong> ${err.message}`);
+      spinner.style.display = "none";
+      btnText.textContent = "Submit assignment";
+      submitBtn.disabled = false;
+      progressWrap.classList.remove("visible");
+    }
+  });
+</script>
+</body>
+</html>
